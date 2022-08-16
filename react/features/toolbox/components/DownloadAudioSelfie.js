@@ -95,13 +95,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
             if (participantVideo) {
                 let filtered = arrayRemove(toArr, "largeVideo");
-                intervalRecord = setInterval(() => paintCanvas(filtered), 30);
 
-
-                let clubbedStream = canvas.captureStream();
-                console.log(clubbedStream.getTracks())
-                console.log(clubbedStream.getAudioTracks())
-                console.log(clubbedStream.getVideoTracks())
 
                 clubbedStream.addTrack(filtered[0].captureStream().getAudioTracks())
                 const options = {mimeType: "video/webm; codecs=vp9"};
