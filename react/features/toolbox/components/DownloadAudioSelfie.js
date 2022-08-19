@@ -75,22 +75,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 });
             }
 
-            /*
-            *
-            * const mediaRecorder = new MediaRecorder(document.getElementsByTagName('audio')[0].captureStream());
-    mediaRecorder.start();const audioChunks = [];
 
-    mediaRecorder.addEventListener("dataavailable", event => {
-      audioChunks.push(event.data);
-    }); mediaRecorder.addEventListener("stop", () => {
-      const audioBlob = new Blob(audioChunks);
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl); console.log('Playing stooped');
-      audio.play();
-    }); setTimeout(() => {
-      mediaRecorder.stop();
-    }, 7000);
-            * */
 
 
             if (participantVideo) {
