@@ -12,14 +12,19 @@ reactDemo.parentNode.insertBefore(audioDemo, btnDemo);
 btnDemo.addEventListener("click", (e) => {
     const audCtx = new AudioContext();
     let jitsiTrackDemo = APP.store.getState()['features/base/tracks'][0].jitsiTrack;
+    let jitsiTrackDemo2 = APP.store.getState()['features/base/tracks'][2].jitsiTrack;
     let streamDemo = jitsiTrackDemo.stream;
+    let streamDemo2 = jitsiTrackDemo2.stream;
     console.log('You have ', APP.store.getState()['features/base/tracks'].length, ' Jitsi Tracks(s)');
     console.log('JitsiTrackDemo is audio JitsiTrack ', streamDemo.mediaType === 'audio', streamDemo);
+    console.log('JitsiTrackDemo2 is audio JitsiTrack ', streamDemo2.mediaType === 'audio', streamDemo);
     const audNodDemo = audCtx.createMediaStreamSource(streamDemo);
+    const audNodDemo2 = audCtx.createMediaStreamSource(streamDemo2);
     const audioChunksDemo = [];
     let destDemo = new MediaStreamAudioDestinationNode(audCtx);
     const mediaRecorderDemo = new MediaRecorder(destDemo.stream);
     audNodDemo.connect(destDemo);
+    audNodDemo2.connect(destDemo);
 
     mediaRecorderDemo.addEventListener("dataavailable", event => {
         console.log('Data Available ', event);
