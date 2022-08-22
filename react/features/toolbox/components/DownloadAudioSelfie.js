@@ -38,18 +38,15 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
 
         this._selfie = () => {
-
-            // get Stream from Tracks
             if (!boolRecording) {
                 boolRecording = true;
+                // get Stream from Tracks
                 let audioStreams = getStreamFromTracks();
                 startRecording(audioStreams);
             } else { // Stop Recording
                 boolRecording = false;
                 saveRecording()
             }
-
-
         };
 
         function startRecording(audioStreams) {
@@ -84,9 +81,12 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 document.body.appendChild(a);
 
                 a.onclick = () => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
                     console.log(`${a.download} save option shown`);
+                    setTimeout(() => {
+                        console.log("SetTimeOut Called");
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(audioUrl);
+                    }, 2000);
                 };
                 a.click();
             });
@@ -113,21 +113,20 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
         function filterStreamsByMediaType(arr, value) {
             return arr.filter(function (ele) {
-                console.log(`Filtering ${value} this element is ${ele.jitsiTrack.stream.mediaType} `)
-                return ele.jitsiTrack.stream.mediaType === value;
+                console.log(`Filtering ${value} this element is ${ele.jitsiTrack.type} `)
+                return ele.jitsiTrack.type === value;
             }).map(function (ele) {
                 return ele.jitsiTrack.stream;
             });
         }
 
         function getStreamFromTracks() {
-
             let tracks = APP.store.getState()['features/base/tracks'];
 
             let valueToFilter = 'audio';
             let audioStreams = filterStreamsByMediaType(tracks, valueToFilter);
 
-            console.log(`${valueToFilter} streams ', audioStreams.length`);
+            console.log(`${valueToFilter} streams length ${audioStreams.length}`);
 
             return audioStreams;
 
