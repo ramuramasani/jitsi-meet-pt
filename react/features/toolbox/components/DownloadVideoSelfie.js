@@ -160,7 +160,6 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                         setTimeout(() => {
                             console.log("SetTimeOut Called");
                             document.body.removeChild(a);
-                            document.body.removeChild(canvas);
                             clearInterval(setIntervalID);
                             window.URL.revokeObjectURL(videoObjectURL);
                         }, 2000);
