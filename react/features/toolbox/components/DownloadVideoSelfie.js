@@ -33,42 +33,55 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
      */
     constructor(props: Props) {
         super(props);
-        let link;
+        let boolRecording = false;
+        let mediaRecorder;
+        let setIntervalID;
+        let canvas;
+
 
         this._selfie = () => {
-            const videos = document.getElementsByTagName('video');
-            let canvas = document.createElement('canvas');
 
-            if (videos.length > 0) {
-                canvas.width = 1080;
-                canvas.height = 720;
+            if (!boolRecording) {
 
-                link = document.createElement("a");
-                document.body.appendChild(link); // for Firefox
-                selfieTogether(videos, canvas);
+                canvas = document.createElement('canvas');
+
+                function getStreamFromTracks(mediaType) {
+                    let tracks = APP.store.getState()['features/base/tracks'];
+
+                    function filterStreamsByMediaType(arr, value) {
+                        return arr.filter(function (ele) {
+                            console.log(`Filtering ${value} this element is ${ele.jitsiTrack.type} `)
+                            return ele.jitsiTrack.type === value;
+                        }).map(function (ele) {
+                            return ele.jitsiTrack.stream;
+                        });
+                    }
+
+                    let arrayMediaStreams = filterStreamsByMediaType(tracks, mediaType);
+                    console.log(`${mediaType} streams length ${arrayMediaStreams.length}`);
+                    return arrayMediaStreams;
+                }
+
+                // get Stream from Tracks
+                let arrayAudioStreams = getStreamFromTracks('audio');
+
+                getVideoStreamFromCanvas();
+                if (arrayAudioStreams.length > 0) {
+                    boolRecording = true;
+                    startRecording(arrayAudioStreams);
+                } else { // warn user - participants must be 2
+
+                }
+            } else { // Stop Recording
+                boolRecording = false;
+                saveRecording()
             }
 
         };
 
-        function testCode() {
-            const videos = document.getElementsByTagName('video');
-            let canvas = document.createElement('canvas');
-            let toArr = Array.prototype.slice.call(videos, 0);
-
-            let participantVideo;
-
-            function getParticipantVideo() {
-
-                toArr.some((obj) => {
-                    if (obj.id.includes('remote')) {
-                        participantVideo = obj;
-                        return true;
-                    }
-                    return false;
-                });
-            }
-
-            getParticipantVideo();
+        function getVideoStreamFromCanvas() {
+            const videosElementsCollection = document.getElementsByTagName('video');
+            let videoElementsArray = Array.prototype.slice.call(videosElementsCollection, 0);
 
             function arrayRemove(arr, value) {
                 return arr.filter(function (ele) {
@@ -76,120 +89,103 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 });
             }
 
-            function paintCanvas(filtered) {
-                for (let i = 0; i < filtered.length; i++) {
-                    canvas.getContext('2d')
-                        .drawImage(filtered[i], (i) * ((canvas.width) / filtered.length), 0, (canvas.width) / filtered.length, canvas.height);
-                }
-            }
+            let filteredVideo = arrayRemove(videoElementsArray, "largeVideo");
+            console.log(`Filtered Videos ${filteredVideo}`);
 
-            let intervalRecord;
-
-            if (participantVideo) {
-                let filtered = arrayRemove(toArr, "largeVideo");
-                intervalRecord = setInterval(() => paintCanvas(filtered), 30);
-
-
-                let clubbedStream = canvas.captureStream();
-                console.log(clubbedStream.getTracks())
-                console.log(clubbedStream.getAudioTracks())
-                console.log(clubbedStream.getVideoTracks())
-
-                clubbedStream.addTrack(filtered[0].captureStream().getAudioTracks())
-                const options = {mimeType: "video/webm; codecs=vp9"};
-                let recordedChunks = [];
-
-                let mediaRecorder = new MediaRecorder(clubbedStream, options);
-
-                function handleDataAvailable(event) {
-                    console.log("data-available");
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
-                        console.log(recordedChunks);
-                        download();
-                    } else {
-                        // …
-                        console.log('event.data.size is ', event.data.size)
+            function clubVideos() {
+                function paintCanvas() {
+                    for (let i = 0; i < filteredVideo.length; i++) {
+                        canvas.getContext('2d')
+                            .drawImage(filteredVideo[i], (i) * ((canvas.width) / filteredVideo.length), 0, (canvas.width) / filteredVideo.length, canvas.height);
                     }
                 }
 
-                function download() {
-                    const blob = new Blob(recordedChunks, {
-                        type: "video/webm"
-                    });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
+                setIntervalID = setInterval(paintCanvas, 30);
+            }
+
+            clubVideos();
+
+        }
+
+        function startRecording(audioStreams) {
+            const audCtx = new AudioContext();
+            let audioDestinationNode = new MediaStreamAudioDestinationNode(audCtx);
+
+            function attachAudioSources() {
+                function createAudioNodes(stream) {
+                    audCtx.createMediaStreamSource(stream).connect(audioDestinationNode)
+                }
+
+                audioStreams.forEach(createAudioNodes);
+                return audioDestinationNode.stream.getTracks();
+            }
+
+            function prepareRecorder() {
+                let recorderChunks = [];
+
+                /**
+                 * Returns a filename based ono the Jitsi room name in the URL and timestamp
+                 * */
+                function getFilename() {
+                    const now = new Date();
+                    const timestamp = now.toISOString();
+                    const room = new RegExp(/(^.+)\s\|/).exec(document.title);
+                    if (room && room[1] !== "")
+                        return `${room[1]}_${timestamp}`;
+                    else
+                        return `polytokRecording_${timestamp}`;
+                }
+
+                mediaRecorder = new MediaRecorder(mediaStreamToRecord, {mimeType: 'video/webm'});
+
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    console.log('Data Available ', event);
+                    recorderChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    console.log('Playing stooped ', recorderChunks);
+                    const videoBlob = new Blob(recorderChunks, {'type': 'video/webm'});
+                    const videoObjectURL = URL.createObjectURL(videoBlob);
+                    console.log('VideoUrl, ', videoObjectURL);
+
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = videoObjectURL;
+                    a.download = `${getFilename()}.webm`;
                     document.body.appendChild(a);
-                    a.style = "display: none";
-                    a.href = url;
-                    a.download = "test.webm";
+
+                    a.onclick = () => {
+                        console.log(`${a.download} save option shown`);
+                        setTimeout(() => {
+                            console.log("SetTimeOut Called");
+                            document.body.removeChild(a);
+                            document.body.removeChild(canvas);
+                            clearInterval(setIntervalID);
+                            window.URL.revokeObjectURL(videoObjectURL);
+                        }, 2000);
+                    };
                     a.click();
-                    window.URL.revokeObjectURL(url);
-                }
-
-
-                mediaRecorder.ondataavailable = handleDataAvailable;
-
-                setTimeout(() => {
-                    clearInterval(intervalRecord);
-                    mediaRecorder.stop();
-
-                }, 5000)
-
-                mediaRecorder.start();
-
-
-            } else {
-                //alert
-            }
-
-        }
-
-
-        function saveBase64AsFile(base64, fileName) {
-            link.setAttribute("href", base64);
-            link.setAttribute("download", fileName);
-            link.click();
-        }
-
-        function selfieTogether(videoReceiver, canvas) {
-            let toArr = Array.prototype.slice.call(videoReceiver, 0);
-
-            function arrayRemove(arr, value) {
-                return arr.filter(function (ele) {
-                    return ele.id !== value;
                 });
             }
 
-            let participantVideo = null;
+            let audioStreamTracks = attachAudioSources();
+            console.log(`audioStreamTracks ${audioStreamTracks}`)
+            let videoStreamTracks = canvas.captureStream().getTracks();
+            console.log(`videoStreamTracks ${videoStreamTracks}`)
+            let mediaStreamToRecord =
+                new MediaStream(audioStreamTracks.concat(videoStreamTracks));
+            console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
 
-            function getParticipantVideo() {
-
-                toArr.some((obj) => {
-                    if (obj.id.includes('remote')) {
-                        participantVideo = obj;
-                        return true;
-                    }
-                    return false;
-                });
-            }
-
-            getParticipantVideo();
-
-            if (participantVideo) {
-                let filtered = arrayRemove(toArr, "largeVideo");
-                for (let i = 0; i < filtered.length; i++) {
-                    canvas.getContext('2d')
-                        .drawImage(filtered[i], (i) * ((canvas.width) / filtered.length), 0, (canvas.width) / filtered.length, canvas.height);
-                }
-                let dataURL = canvas.toDataURL("image/png");
-                saveBase64AsFile(dataURL, "sample.png");
-
-            } else {
-                //alert
-            }
+            prepareRecorder();
+            mediaRecorder.start();
 
         }
+
+        function saveRecording() {
+            mediaRecorder.stop();
+        }
+
     }
 
     /**
