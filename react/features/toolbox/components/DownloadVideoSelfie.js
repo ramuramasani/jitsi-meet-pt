@@ -38,6 +38,15 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
         let setIntervalID;
         let canvas;
 
+        let videoFormatSupport;
+        let userAgent = navigator.userAgent;
+
+        if (userAgent.match(/safari/i)) {
+            videoFormatSupport = "mp4";
+        } else {
+            videoFormatSupport = "webm";
+        }
+
 
         this._selfie = () => {
 
@@ -136,7 +145,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                         return `polytokRecording_${timestamp}`;
                 }
 
-                mediaRecorder = new MediaRecorder(mediaStreamToRecord, {mimeType: 'video/webm'});
+                mediaRecorder = new MediaRecorder(mediaStreamToRecord, {mimeType: `video/${videoFormatSupport}`});
 
                 mediaRecorder.addEventListener("dataavailable", event => {
                     console.log('Data Available ', event);
@@ -145,14 +154,14 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
                 mediaRecorder.addEventListener("stop", () => {
                     console.log('Playing stooped ', recorderChunks);
-                    const videoBlob = new Blob(recorderChunks, {'type': 'video/webm'});
+                    const videoBlob = new Blob(recorderChunks, {'type': `video/${videoFormatSupport}`});
                     const videoObjectURL = URL.createObjectURL(videoBlob);
                     console.log('VideoUrl, ', videoObjectURL);
 
                     const a = document.createElement('a');
                     a.style.display = 'none';
                     a.href = videoObjectURL;
-                    a.download = `${getFilename()}.webm`;
+                    a.download = `${getFilename()}.${videoFormatSupport}`;
                     document.body.appendChild(a);
 
                     a.onclick = () => {
