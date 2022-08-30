@@ -37,14 +37,15 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
         let mediaRecorder;
         let setIntervalID;
         let canvas;
+        let streamCanvas;
 
         let videoFormatSupport;
         let userAgent = navigator.userAgent;
 
-        if (userAgent.match(/safari/i)) {
-            videoFormatSupport = "mp4";
-        } else {
+        if (userAgent.match(/chrome/i)) {
             videoFormatSupport = "webm";
+        } else {
+            videoFormatSupport = "mp4";
         }
 
 
@@ -132,6 +133,15 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
             function prepareRecorder() {
                 let recorderChunks = [];
 
+                let audioStreamTracks = attachAudioSources();
+                console.log(`audioStreamTracks ${audioStreamTracks}`)
+                let videoStreamTracks = canvas.captureStream().getTracks();
+                console.log(`videoStreamTracks ${videoStreamTracks}`)
+                let mediaStreamToRecord =
+                    new MediaStream(audioStreamTracks.concat(videoStreamTracks));
+                console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
+
+
                 /**
                  * Returns a filename based ono the Jitsi room name in the URL and timestamp
                  * */
@@ -145,7 +155,9 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                         return `polytokRecording_${timestamp}`;
                 }
 
-                mediaRecorder = new MediaRecorder(mediaStreamToRecord, {mimeType: `video/${videoFormatSupport}`});
+                streamCanvas = canvas.captureStream();
+                streamCanvas.addTrack(audioStreamTracks[0]);
+                mediaRecorder = new MediaRecorder(streamCanvas, {mimeType: `video/${videoFormatSupport}`});
 
                 mediaRecorder.addEventListener("dataavailable", event => {
                     console.log('Data Available ', event);
@@ -176,14 +188,6 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                     a.click();
                 });
             }
-
-            let audioStreamTracks = attachAudioSources();
-            console.log(`audioStreamTracks ${audioStreamTracks}`)
-            let videoStreamTracks = canvas.captureStream().getTracks();
-            console.log(`videoStreamTracks ${videoStreamTracks}`)
-            let mediaStreamToRecord =
-                new MediaStream(audioStreamTracks.concat(videoStreamTracks));
-            console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
 
             prepareRecorder();
             mediaRecorder.start();
