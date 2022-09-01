@@ -36,7 +36,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
         let boolRecording = false;
         let mediaRecorder;
         let setIntervalID;
-        let canvas;
+        var canvas;
         let streamCanvas;
 
         let videoFormatSupport;
@@ -133,13 +133,15 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
             function prepareRecorder() {
                 let recorderChunks = [];
 
-                let audioStreamTracks = attachAudioSources();
-                console.log(`audioStreamTracks ${audioStreamTracks}`)
-                let videoStreamTracks = canvas.captureStream().getTracks();
-                console.log(`videoStreamTracks ${videoStreamTracks}`)
-                let mediaStreamToRecord =
-                    new MediaStream(audioStreamTracks.concat(videoStreamTracks));
-                console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
+                /*
+                                let audioStreamTracks = attachAudioSources();
+                                console.log(`audioStreamTracks ${audioStreamTracks}`)
+                                let videoStreamTracks = APP.store.getState()['features/base/tracks'][3].jitsiTrack.track/!*canvas.captureStream().getTracks()*!/;
+                                console.log(`videoStreamTracks ${videoStreamTracks}`)
+                                let mediaStreamToRecord =
+                                    new MediaStream(audioStreamTracks.concat(videoStreamTracks));
+                                console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
+                */
 
 
                 /**
@@ -156,7 +158,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 }
 
                 streamCanvas = canvas.captureStream();
-                streamCanvas.addTrack(audioStreamTracks[0]);
+                //   streamCanvas.addTrack(audioStreamTracks[0]);
                 mediaRecorder = new MediaRecorder(streamCanvas, {mimeType: `video/${videoFormatSupport}`});
 
                 mediaRecorder.addEventListener("dataavailable", event => {
@@ -166,7 +168,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
                 mediaRecorder.addEventListener("stop", () => {
                     console.log('Playing stooped ', recorderChunks);
-                    const videoBlob = new Blob(recorderChunks, {'type': `video/${videoFormatSupport}`});
+                    const videoBlob = new Blob(recorderChunks, {type: `video/${videoFormatSupport}`});
                     const videoObjectURL = URL.createObjectURL(videoBlob);
                     console.log('VideoUrl, ', videoObjectURL);
 
@@ -183,7 +185,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                             document.body.removeChild(a);
                             clearInterval(setIntervalID);
                             window.URL.revokeObjectURL(videoObjectURL);
-                        }, 2000);
+                        }, 7000);
                     };
                     a.click();
                 });
