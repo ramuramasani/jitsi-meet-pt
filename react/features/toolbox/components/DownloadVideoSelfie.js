@@ -133,15 +133,13 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
             function prepareRecorder() {
                 let recorderChunks = [];
 
-                /*
-                                let audioStreamTracks = attachAudioSources();
-                                console.log(`audioStreamTracks ${audioStreamTracks}`)
-                                let videoStreamTracks = APP.store.getState()['features/base/tracks'][3].jitsiTrack.track/!*canvas.captureStream().getTracks()*!/;
-                                console.log(`videoStreamTracks ${videoStreamTracks}`)
-                                let mediaStreamToRecord =
-                                    new MediaStream(audioStreamTracks.concat(videoStreamTracks));
-                                console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
-                */
+                let audioStreamTracks = attachAudioSources();
+                console.log(`audioStreamTracks ${audioStreamTracks}`)
+                let videoStreamTracks = canvas.captureStream().getTracks();
+                console.log(`videoStreamTracks ${videoStreamTracks}`)
+                let mediaStreamToRecord =
+                    new MediaStream(audioStreamTracks.concat(videoStreamTracks));
+                console.log(`MediaStreamToRecord ${mediaStreamToRecord}`);
 
 
                 /**
@@ -157,9 +155,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                         return `polytokRecording_${timestamp}`;
                 }
 
-                streamCanvas = canvas.captureStream();
-                //   streamCanvas.addTrack(audioStreamTracks[0]);
-                mediaRecorder = new MediaRecorder(streamCanvas, {mimeType: `video/${videoFormatSupport}`});
+                mediaRecorder = new MediaRecorder(mediaStreamToRecord, {mimeType: `video/${videoFormatSupport}`});
 
                 mediaRecorder.addEventListener("dataavailable", event => {
                     console.log('Data Available ', event);

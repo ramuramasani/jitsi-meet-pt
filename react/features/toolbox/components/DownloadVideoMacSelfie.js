@@ -96,7 +96,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 console.log(clubbedStream.getVideoTracks())
 
                 //  clubbedStream.addTrack(filtered[0].captureStream().getAudioTracks())
-                const options = {mimeType: "video/webm"};
+                const options = {mimeType: "video/mp4"};
                 let recordedChunks = [];
 
                 let mediaRecorder = new MediaRecorder(clubbedStream, options);
@@ -114,15 +114,13 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 }
 
                 function download() {
-                    const blob = new Blob(recordedChunks, {
-                        type: "video/webm"
-                    });
+                    const blob = new Blob(recordedChunks);
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     document.body.appendChild(a);
                     a.style = "display: none";
                     a.href = url;
-                    a.download = "test.webm";
+                    a.download = "test.mp4";
                     a.click();
                     // window.URL.revokeObjectURL(url);
                 }
