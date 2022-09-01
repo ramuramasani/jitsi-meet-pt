@@ -36,8 +36,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
         let boolRecording = false;
         let mediaRecorder;
         let setIntervalID;
-        var canvas;
-        let streamCanvas;
+        let canvas;
 
         let videoFormatSupport;
         let userAgent = navigator.userAgent;
