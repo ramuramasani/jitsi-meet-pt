@@ -45,10 +45,10 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 document.getElementById('layout_wrapper').style.height = '45%'
                 let reactDemo = document.getElementById('react');
 
-                let btnDemo = document.createElement('button');
                 vidDemo = document.createElement('video');
 
                 let canvasDemo = document.createElement('canvas');
+
                 canvas = document.createElement('canvas');
 
 
@@ -60,21 +60,16 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 vidDemo.autoplay = true
                 vidDemo.controls = true
 
-                btnDemo.innerHTML = 'Click me to Test Selfie from Javascript and wait for 7 seconds';
-                btnDemo.style.height = '50px';
-                btnDemo.style.fontSize = '1.3em'
 
-                reactDemo.parentNode.insertBefore(btnDemo, reactDemo);
-                reactDemo.parentNode.insertBefore(canvasDemo, btnDemo);
+                reactDemo.parentNode.insertBefore(canvasDemo, reactDemo);
                 reactDemo.parentNode.insertBefore(vidDemo, canvasDemo);
 
 
                 const videos = document.getElementsByTagName('video');
-                // let canvasDemo = document.createElement('canvasDemo');
 
                 if (videos.length > 0) {
-                    canvasDemo.width = 1080;
-                    canvasDemo.height = 720;
+                    canvas.style.width = 1080;
+                    canvas.style.height = 720;
 
                     function getStreamFromTracks(mediaType) {
                         let tracks = APP.store.getState()['features/base/tracks'];
@@ -99,7 +94,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                     if (arrayAudioStreams.length > 0) {
                         boolRecording = true;
 
-                        selfieTogether(videos, canvasDemo, arrayAudioStreams);
+                        selfieTogether(videos, canvasDemo, canvas, arrayAudioStreams);
                     } else { // warn user - participants must be 2
 
                     }
@@ -112,7 +107,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
         };
 
-        function selfieTogether(videoReceiver, canvas, audioStreams) {
+        function selfieTogether(videoReceiver, canvasDemo, canvas, audioStreams) {
 
             const audCtx = new AudioContext();
             let audioDestinationNode = new MediaStreamAudioDestinationNode(audCtx);
@@ -166,8 +161,10 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 console.log('Filtered ', filtered);
                 filtered = arrayRemove(filtered, "");
                 console.log('Filtered ', filtered);
+                let context2DDemo = canvas.getContext('2d');
                 let context2D = canvas.getContext('2d');
                 intervalRecord = setInterval(() => {
+                    paintCanvas(filtered, context2DDemo);
                     paintCanvas(filtered, context2D);
                 }, 30);
 

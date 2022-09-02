@@ -53,6 +53,9 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
             if (!boolRecording) {
 
                 canvas = document.createElement('canvas');
+                canvas.style.width = 1080;
+                canvas.style.height = 720;
+
 
                 function getStreamFromTracks(mediaType) {
                     let tracks = APP.store.getState()['features/base/tracks'];
