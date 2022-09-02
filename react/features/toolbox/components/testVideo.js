@@ -108,7 +108,6 @@ btnDemo.addEventListener("click", (e) => {
                 console.log('TimeOut called');
                 URL.revokeObjectURL(url);
             }, 7000);
-            // window.URL.revokeObjectURL(url);
         }
 
 
