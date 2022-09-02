@@ -11,6 +11,7 @@ vidDemo.style.height = 200
 vidDemo.style.width = 200
 vidDemo.playsInline = true
 vidDemo.autoplay = true
+vidDemo.controls = true
 
 btnDemo.innerHTML = 'Click me to Test Selfie from Javascript and wait for 7 seconds';
 btnDemo.style.height = '50px';
@@ -43,14 +44,14 @@ btnDemo.addEventListener("click", (e) => {
 
     function arrayRemove(arr, value) {
         return arr.filter(function (ele) {
+            console.log('Ele Id ', ele.id);
             return ele.id !== value;
         });
     }
 
-    function paintCanvas(filtered) {
+    function paintCanvas(filtered, context2D) {
         for (let i = 0; i < filtered.length; i++) {
-            canvas.getContext('2d')
-                .drawImage(filtered[i], (i) * ((canvas.width) / filtered.length), 0, (canvas.width) / filtered.length, canvas.height);
+            context2D.drawImage(filtered[i], (i) * (canvas.width / filtered.length), 0, canvas.width / filtered.length, canvas.height);
         }
     }
 
@@ -59,13 +60,18 @@ btnDemo.addEventListener("click", (e) => {
     if (participantVideo) {
         let filtered = arrayRemove(toArr, "largeVideo");
         console.log('Filtered ', filtered);
-        intervalRecord = setInterval(() => paintCanvas(filtered), 30);
+        filtered = arrayRemove(filtered, "");
+        console.log('Filtered ', filtered);
+        let context2D = canvas.getContext('2d');
+        intervalRecord = setInterval(() => {
+            paintCanvas(filtered, context2D);
+        }, 30);
 
         let clubbedStream = canvas.captureStream();
-        vidDemo.srcObject = clubbedStream;
         console.log(clubbedStream.getTracks())
         console.log(clubbedStream.getAudioTracks())
         console.log(clubbedStream.getVideoTracks())
+
 
         const options = {mimeType: "video/mp4"};
         let recordedChunks = [];
@@ -88,12 +94,15 @@ btnDemo.addEventListener("click", (e) => {
         function download() {
             const blob = new Blob(recordedChunks, {type: 'video/mp4'});
             const url = URL.createObjectURL(blob);
+            vidDemo.src = url;
+            vidDemo.play();
+
             const a = document.createElement("a");
             document.body.appendChild(a);
             a.style = "display: none";
             a.href = url;
             a.download = "test.mp4";
-            a.click();
+            // a.click();
             // window.URL.revokeObjectURL(url);
         }
 
