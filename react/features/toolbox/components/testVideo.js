@@ -102,7 +102,12 @@ btnDemo.addEventListener("click", (e) => {
             a.style = "display: none";
             a.href = url;
             a.download = "test.mp4";
-            // a.click();
+            a.click();
+
+            setTimeout(() => {
+                console.log('TimeOut called');
+                URL.revokeObjectURL(url);
+            }, 7000);
             // window.URL.revokeObjectURL(url);
         }
 
