@@ -173,7 +173,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
 
                 let clubbedStream = canvas.captureStream();
-                //  audioStreamTracks.forEach((track) => clubbedStream.addTrack(track));
+                audioStreamTracks.forEach((track) => clubbedStream.addTrack(track));
 
                 console.log(clubbedStream.getTracks())
                 console.log(clubbedStream.getAudioTracks())
