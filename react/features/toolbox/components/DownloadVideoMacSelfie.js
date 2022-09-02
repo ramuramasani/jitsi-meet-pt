@@ -33,47 +33,103 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
      */
     constructor(props: Props) {
         super(props);
+        let boolRecording = false;
+        let canvas;
+        let mediaRecorder;
+        let recordedChunks = [];
 
         let vidDemo;
         this._selfie = () => {
 
-            document.getElementById('layout_wrapper').style.height = '45%'
-            let reactDemo = document.getElementById('react');
+            if (!boolRecording) {
+                document.getElementById('layout_wrapper').style.height = '45%'
+                let reactDemo = document.getElementById('react');
 
-            let btnDemo = document.createElement('button');
-            vidDemo = document.createElement('video');
+                let btnDemo = document.createElement('button');
+                vidDemo = document.createElement('video');
 
-            let canvas = document.createElement('canvas');
-            canvas.style.height = 200
-            canvas.style.width = 200
-            vidDemo.style.height = 200
-            vidDemo.style.width = 200
-            vidDemo.playsInline = true
-            vidDemo.autoplay = true
-            vidDemo.controls = true
-
-            btnDemo.innerHTML = 'Click me to Test Selfie from Javascript and wait for 7 seconds';
-            btnDemo.style.height = '50px';
-            btnDemo.style.fontSize = '1.3em'
-
-            reactDemo.parentNode.insertBefore(btnDemo, reactDemo);
-            reactDemo.parentNode.insertBefore(canvas, btnDemo);
-            reactDemo.parentNode.insertBefore(vidDemo, canvas);
+                let canvasDemo = document.createElement('canvas');
+                canvas = document.createElement('canvas');
 
 
-            const videos = document.getElementsByTagName('video');
-            // let canvas = document.createElement('canvas');
+                canvasDemo.style.height = 200
+                canvasDemo.style.width = 200
+                vidDemo.style.height = 200
+                vidDemo.style.width = 200
+                vidDemo.playsInline = true
+                vidDemo.autoplay = true
+                vidDemo.controls = true
 
-            if (videos.length > 0) {
-                canvas.width = 1080;
-                canvas.height = 720;
+                btnDemo.innerHTML = 'Click me to Test Selfie from Javascript and wait for 7 seconds';
+                btnDemo.style.height = '50px';
+                btnDemo.style.fontSize = '1.3em'
 
-                selfieTogether(videos, canvas);
+                reactDemo.parentNode.insertBefore(btnDemo, reactDemo);
+                reactDemo.parentNode.insertBefore(canvasDemo, btnDemo);
+                reactDemo.parentNode.insertBefore(vidDemo, canvasDemo);
+
+
+                const videos = document.getElementsByTagName('video');
+                // let canvasDemo = document.createElement('canvasDemo');
+
+                if (videos.length > 0) {
+                    canvasDemo.width = 1080;
+                    canvasDemo.height = 720;
+
+                    function getStreamFromTracks(mediaType) {
+                        let tracks = APP.store.getState()['features/base/tracks'];
+
+                        function filterStreamsByMediaType(arr, value) {
+                            return arr.filter(function (ele) {
+                                console.log(`Filtering ${value} this element is ${ele.jitsiTrack.type} and is ${ele.jitsiTrack} `)
+                                return ele.jitsiTrack.type === value;
+                            }).map(function (ele) {
+                                return ele.jitsiTrack.stream;
+                            });
+                        }
+
+                        let arrayMediaStreams = filterStreamsByMediaType(tracks, mediaType);
+                        console.log(`${mediaType} streams length ${arrayMediaStreams.length}`);
+                        return arrayMediaStreams;
+                    }
+
+                    // get Stream from Tracks
+                    let arrayAudioStreams = getStreamFromTracks('audio');
+
+                    if (arrayAudioStreams.length > 0) {
+                        boolRecording = true;
+
+                        selfieTogether(videos, canvasDemo, arrayAudioStreams);
+                    } else { // warn user - participants must be 2
+
+                    }
+
+                }
+            } else {
+                boolRecording = false;
+                saveRecording()
             }
 
         };
 
-        function selfieTogether(videoReceiver, canvas) {
+        function selfieTogether(videoReceiver, canvas, audioStreams) {
+
+            const audCtx = new AudioContext();
+            let audioDestinationNode = new MediaStreamAudioDestinationNode(audCtx);
+
+            function attachAudioSources() {
+                function createAudioNodes(stream) {
+                    audCtx.createMediaStreamSource(stream).connect(audioDestinationNode)
+                }
+
+                audioStreams.forEach(createAudioNodes);
+                console.log("AudioDestinationNode Stream Tracks ", audioDestinationNode.stream.getTracks());
+                return audioDestinationNode.stream.getTracks();
+            }
+
+            let audioStreamTracks = attachAudioSources();
+            console.log(`audioStreamTracks ${audioStreamTracks}`)
+
             let toArr = Array.prototype.slice.call(videoReceiver, 0);
 
             let participantVideo;
@@ -117,15 +173,17 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
 
                 let clubbedStream = canvas.captureStream();
+                //  audioStreamTracks.forEach((track) => clubbedStream.addTrack(track));
+
                 console.log(clubbedStream.getTracks())
                 console.log(clubbedStream.getAudioTracks())
                 console.log(clubbedStream.getVideoTracks())
 
 
                 const options = {mimeType: "video/mp4"};
-                let recordedChunks = [];
+                recordedChunks = [];
 
-                let mediaRecorder = new MediaRecorder(clubbedStream, options);
+                mediaRecorder = new MediaRecorder(clubbedStream, options);
 
                 function handleDataAvailable(event) {
                     console.log("data-available ", event);
@@ -141,16 +199,31 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                 }
 
                 function download() {
+                    console.log('Playing stopped ', recordedChunks);
+
                     const blob = new Blob(recordedChunks, {type: 'video/mp4'});
-                    const url = URL.createObjectURL(blob);
-                    vidDemo.src = url;
+                    const videoObjectURL = URL.createObjectURL(blob);
+                    console.log('VideoUrl, ', videoObjectURL);
+
+                    vidDemo.src = videoObjectURL;
                     vidDemo.play();
 
                     const a = document.createElement("a");
                     document.body.appendChild(a);
                     a.style = "display: none";
-                    a.href = url;
+                    a.href = videoObjectURL;
                     a.download = "test.mp4";
+
+                    a.onclick = () => {
+                        console.log(`${a.download} save option shown`);
+                        setTimeout(() => {
+                            console.log("SetTimeOut Called");
+                            document.body.removeChild(a);
+                            clearInterval(intervalRecord);
+                            //  window.URL.revokeObjectURL(videoObjectURL);
+                        }, 7000);
+                    };
+
                     a.click();
 
 
@@ -159,11 +232,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
                 mediaRecorder.ondataavailable = handleDataAvailable;
 
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                    clearInterval(intervalRecord);
-
-                }, 5000)
+                mediaRecorder.addEventListener("stop", download);
 
                 mediaRecorder.start();
 
@@ -172,6 +241,12 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
             }
 
         }
+
+        function saveRecording() {
+            mediaRecorder.stop();
+        }
+
+
     }
 
     /**
