@@ -38,38 +38,17 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
         let mediaRecorder;
         let recordedChunks = [];
 
-        let vidDemo;
         this._selfie = () => {
 
             if (!boolRecording) {
-                document.getElementById('layout_wrapper').style.height = '45%'
-                let reactDemo = document.getElementById('react');
-
-                vidDemo = document.createElement('video');
-
-                let canvasDemo = document.createElement('canvas');
 
                 canvas = document.createElement('canvas');
-
-
-                canvasDemo.style.height = 200
-                canvasDemo.style.width = 200
-                vidDemo.style.height = 200
-                vidDemo.style.width = 200
-                vidDemo.playsInline = true
-                vidDemo.autoplay = true
-                vidDemo.controls = true
-
-
-                reactDemo.parentNode.insertBefore(canvasDemo, reactDemo);
-                reactDemo.parentNode.insertBefore(vidDemo, canvasDemo);
-
+                canvas.style.width = 1080;
+                canvas.style.height = 720;
 
                 const videos = document.getElementsByTagName('video');
 
                 if (videos.length > 0) {
-                    canvas.style.width = 1080;
-                    canvas.style.height = 720;
 
                     function getStreamFromTracks(mediaType) {
                         let tracks = APP.store.getState()['features/base/tracks'];
@@ -94,7 +73,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                     if (arrayAudioStreams.length > 0) {
                         boolRecording = true;
 
-                        selfieTogether(videos, canvasDemo, canvas, arrayAudioStreams);
+                        selfieTogether(videos, canvas, arrayAudioStreams);
                     } else { // warn user - participants must be 2
 
                     }
@@ -107,7 +86,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
 
         };
 
-        function selfieTogether(videoReceiver, canvasDemo, canvas, audioStreams) {
+        function selfieTogether(videoReceiver, canvas, audioStreams) {
 
             const audCtx = new AudioContext();
             let audioDestinationNode = new MediaStreamAudioDestinationNode(audCtx);
@@ -159,12 +138,9 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
             if (participantVideo) {
                 let filtered = arrayRemove(toArr, "largeVideo");
                 console.log('Filtered ', filtered);
-                filtered = arrayRemove(filtered, "");
-                console.log('Filtered ', filtered);
-                let context2DDemo = canvas.getContext('2d');
+
                 let context2D = canvas.getContext('2d');
                 intervalRecord = setInterval(() => {
-                    paintCanvas(filtered, context2DDemo);
                     paintCanvas(filtered, context2D);
                 }, 30);
 
@@ -202,9 +178,6 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                     const videoObjectURL = URL.createObjectURL(blob);
                     console.log('VideoUrl, ', videoObjectURL);
 
-                    vidDemo.src = videoObjectURL;
-                    vidDemo.play();
-
                     const a = document.createElement("a");
                     document.body.appendChild(a);
                     a.style = "display: none";
@@ -217,7 +190,7 @@ class DownloadSelfie extends AbstractSelfieButton<Props, *> {
                             console.log("SetTimeOut Called");
                             document.body.removeChild(a);
                             clearInterval(intervalRecord);
-                            //  window.URL.revokeObjectURL(videoObjectURL);
+                            window.URL.revokeObjectURL(videoObjectURL);
                         }, 7000);
                     };
 
